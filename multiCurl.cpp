@@ -121,7 +121,7 @@ void multiCurl::add_request(int id, const char* url, int type,const char* conten
 	curl_easy_setopt(pRequest->get_handle(), CURLOPT_SSL_VERIFYHOST, 0L);
 
 	if( type == 1 ) {
-		curl_easy_setopt(pRequest->get_handle(), CURLOPT_CUSTOMREQUEST, "POST");
+		// curl_easy_setopt(pRequest->get_handle(), CURLOPT_CUSTOMREQUEST, "POST");
 		curl_easy_setopt(pRequest->get_handle(), CURLOPT_POST, 1L );
 		curl_easy_setopt(pRequest->get_handle(), CURLOPT_POSTFIELDS, content);
 	}

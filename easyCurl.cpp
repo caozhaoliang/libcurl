@@ -48,8 +48,15 @@ static size_t onWriteData(void* buffer, size_t size, size_t nmemb, void* lpVoid)
     str->append(pData, size * nmemb);  
     return nmemb;  
 }
+size_t write_data(void *ptr, size_t size, size_t nmemb, void* stream)   
+{  
+	string data((const char*)ptr,(size_t) size*nmemb );
+	*((stringstream*) stream) << data <<endl;
+	return size*nmemb;
+}
+
 /*  libcurl write callback function */  
-size_t write_data(void *ptr, size_t size, size_t nmemb, FILE* stream)   
+size_t write_data1(void *ptr, size_t size, size_t nmemb, FILE* stream)   
 {  
     size_t written = fwrite(ptr, size, nmemb, stream);  
     return written;  
@@ -108,12 +115,32 @@ int easyCurl::http_get(const string& strUrl,const string& header,int TIMEOUT, st
 
 }
 
+int easyCurl::download(const string url,string& outStream){
+	stringstream out;
+	CURL* curl = curl_easy_init();
+	
+	curl_easy_setopt(curl,CURLOPT_URL,url.c_str());
+	curl_easy_setopt(curl,CURLOPT_FOLLOWLOCATION,1L);
+	curl_easy_setopt(curl,CURLOPT_NOSIGNAL,1L);
+	curl_easy_setopt(curl,CURLOPT_ACCEPT_ENCODING,"deflate");
+	curl_easy_setopt(curl,CURLOPT_WRITEFUNCTION, write_data);
+	curl_easy_setopt(curl,CURLOPT_WRITEDATA,&out);
+	CURLcode res = curl_easy_perform(curl);
+	if(res!=CURLE_OK) {
+		fprintf(stderr, "curl_easy_perform() failed: %s\n",curl_easy_strerror(res) );
+		return -1;
+	}
+	outStream = out.str();
+	return 0;
+
+}
+
 int easyCurl::http_post(const string& strUrl,const string& header,const string& sBody,int TIMEOUT, string& szResponse,const char* pCaPath){
 	if( strUrl.empty() || strUrl.length() < 5 || strUrl.length() > HTTP_URL_MAXLEN ){
 		return -1;
 	}
 	CURLcode res;
-	CURLM* m_curl = curl_easy_init();
+	CURL* m_curl = curl_easy_init();
 	if( m_curl == NULL ){
 		return CURLE_FAILED_INIT;
 	}
